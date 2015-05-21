@@ -1,63 +1,56 @@
 #!/usr/local/bin/python3
-
-import TextProcessor
-import FolderManager
-import EmployeeLoad
 import os
+import PatternMatch
+import FolderManager
 
-#Create a new instance of an employee load for this file
-e = EmployeeLoad.ListEmployee('/Users/mikahl/Dev/Test/employee_list.txt')
-
+#First, establish source files
 #Scan a folder of imported pdfs to categorize
-src_folder = FolderManager.RootDirectory('/Users/mikahl/Dev/imported_pdfs/', search_results=[])
+source = '/Users/mikahl/Dev/imported_pdfs/'
+destination = '/Users/mikahl/Dev/Write'
+employeeTxt = '/Users/mikahl/Dev/Test/employee_list.txt'
 extension = '.pdf'
+delimiters = ['-', ',',' ']
+threshold = 0
+
+#Load each employee as a pattern from each line of text file.
+employee_list = PatternMatch.TextRead(employeeTxt, delimiters=delimiters)
+
+#Now examine files with a FolderManager instance.
+src_folder = FolderManager.RootDirectory(source, destination)
+
+#Search for all available PDFs
 src_folder.recursive_search(extension, path=None)
 
-#Copy over these search results in case I want to make another search later.
-unprocessed_pdfs = src_folder.search_results[:]
+for file in src_folder.files:
+    #Create a pattern object('query') based on the filenames in source directroy.
+    query = str(file.file_name)
+    query = PatternMatch.Pattern(query)
 
-# print(unprocessed_pdfs)
-#Now we're going to examine the pdf filenames for any resembelence to our list of
-#employees
+    #Breaks up name into meaningful chunks to match with.
+    query.chunkify(delimiters)
 
-#Now create a list to add the processed text to.
-processed_files = []
+    #Create a variable for a potential match in chunks between file names and
+    #the input text file.
+    name_match = employee_list.lookup(query, threshold)
 
-for pdf in unprocessed_pdfs:
-    raw_pdf = str(pdf)
-    raw_pdf = TextProcessor.TextProcess(raw_pdf, extension=None, name=None)
-    processed_files.append(raw_pdf)
-    #print(raw_pdf.input_text)
+    #As soon as the variable contains matches, that means we have a hit, and
+    #now begin to move files over to their own directory.
+    if name_match:
+        print("*** match {0} to {1} *** ".format(name_match, query.chunks))
+        #Create a new name for the file, based on the convention
+        new_name = name_match
 
-#loop through each employee thing, compare it too the employee list to see
-#if there's a match.  If there there's a match, append to found_list
+        #Create new directory for employee, then move its file there.
+        src_folder.create_dir(new_name)
 
-filtered_list = []
+        #Rename file itself to match directory, and number it if there's more
+        #than one.
+        file.new_file_name = new_name
+        print(file.new_file_name)
 
-#Compare the filenames to listed employee names, and add which ones overlap.
-for text in processed_files:
-    sub_list = e.search(text)
-    filtered_list += sub_list
-
-print("Found a total of {0} employees".format(len(filtered_list)))
-
-#Establish a destination folder
-dest = os.path.join('/Users/mikahl/Dev/Test/Dest')
-
-if os.path.exists(dest):
-    pass
-else:
-    os.mkdir(dest)
-
-#Print off employee names to be sure.
-for i in filtered_list:
-    print(i.last_name)
-    dir_name = '{0}-{1},{2}'.format(i.ID, i.last_name, i.first_name)
-
-    #Check to see if directory already exists
-    employee_dir = os.path.join(dest, dir_name)
-    if os.path.exists(employee_dir):
-        i.rewrite(employee_dir)
+        #Finally move the file to the new path.
+        file.destination_path = os.path.join(src_folder.dest_path, file.new_file_name)
+        print(file.destination_path)
+        file.move()
     else:
-        os.mkdir(employee_dir)
-        i.rewrite(employee_dir)
+        pass
