@@ -3,23 +3,9 @@ from sys import argv
 
 class Pattern:
     '''Does pattern matching for text processing.'''
-    def __init__(self, text, chunks=[], match_contents=False, fixed_length=False, textType=False, number=False):
+    def __init__(self, text, chunks=[]):
         self.text = text
         self.chunks = chunks
-        self.match_contents = match_contents
-        self.fixed_length = fixed_length
-        self.textType = textType
-        self.number = number
-
-        if self.fixed_length == True:
-            self.fixed_length = len(self.text)
-
-        elif self.textType == True:
-            self.textType = type(self.text)
-
-        elif self.number == True:
-            self.number = self.text.isdigit()
-
 
         #seperates any text seperated by a delimiter and puts them into chunks.
     def chunkify(self, delimiters):
@@ -61,12 +47,17 @@ class TextRead:
         self.text_list = text_list
         self.delimiters = delimiters
         self.patterns = patterns
+
         #Load text file
         self.text_list = open(text_file_path, 'r')
 
         for number, each_line in enumerate(self.text_list):
             line_number = str(number)
             line_text = str(each_line)
+            #Now strip the newlines, they're just annoying
+            line_text = line_text.rstrip()
+
+            #Combine them to prepare them for new Pattern instance.
             line_name = str(line_number + line_text)
 
             line_name = Pattern(str(line_text))

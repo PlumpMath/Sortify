@@ -25,26 +25,48 @@ class File:
         #Now join to destination path
         full_new_file_path = os.path.join(self.destination_path, new_name_with_ext)
 
+        print(full_new_file_path)
+
+        #Invoke nice_rename.  Might just merge this function later.
+        self.nice_rename(full_new_file_path)
+
+    def nice_rename(self, new_file):
+        '''Makes sure it isn't overwriting anything.'''
+
+        new_file = new_file.rstrip()
+
         #Check to see if this file name already exists. Number it if so.
-        if os.path.exists(full_new_file_path):
-            numbered_file_name = self.underscore_number_file(self.new_file_name)
+        if os.path.exists(new_file):
+            print("***File {0} exists, numbering it".format(new_file))
+            numbered_file_name = self.number_file(new_file)
             new_name_with_ext = str(numbered_file_name + '.' + self.extension)
             full_new_file_path = os.path.join(self.destination_path, new_name_with_ext)
+
+            #Now recursively call the naming function again.
+            self.nice_rename(full_new_file_path)
         else:
-            pass
+            os.rename(self.full_file_path_name, new_file)
 
-        os.rename(self.full_file_path_name, full_new_file_path)
-
-    def underscore_number_file(self, text, padding=2):
+    def number_file(self, text, padding=2):
         '''Takes an input file-name and figures out where to add a string'''
-        for x in range(0, 100):
-            ending = str('_' + str(x).zfill(padding))
-            new_ending = str('_' + str(x + 1).zfill(padding))
+        #First get rid of extension
+        split_text = text.split('.')
 
-            if text.endswith(ending):
-                return_text = text.replace(ending, new_ending)
-            else:
-                return_text = str(text + '_' + str(1).zfill(padding))
+        text = split_text[0]
+
+        #Now check to see if number is already there.
+        last = text[-padding:]
+
+        #Check to see if last three characters are numbers, and if so, add one.
+        if last.isdigit():
+            next_increment = str(int(last) + 1)
+
+            #Make sure to pad the answer
+            next_increment = next_increment.zfill(padding)
+
+            return_text = text.replace(last, str(next_increment))
+        else:
+            return_text = text + '01'
 
         return return_text
 
