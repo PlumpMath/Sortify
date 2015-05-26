@@ -4,7 +4,7 @@ import sys
 import PatternMatch
 import FolderManager
 
-def employee_sorter(employeeTxt, source, destination, extension='.pdf', delimiters=['-', ',',' '], threshold=0):
+def employee_sorter(employeeTxt, source, destination, extension='.pdf', delimiters=['-', ',',' '], threshold=2):
 
     #First, establish source files
     #Scan a folder of imported pdfs to categorize
@@ -33,7 +33,6 @@ def employee_sorter(employeeTxt, source, destination, extension='.pdf', delimite
         #As soon as the variable contains matches, that means we have a hit, and
         #now begin to move files over to their own directory.
         if name_match:
-            print("*** match {0} to {1} *** ".format(name_match, query.chunks))
             #Create a new name for the file, based on the convention
             new_name = name_match
 
@@ -43,14 +42,25 @@ def employee_sorter(employeeTxt, source, destination, extension='.pdf', delimite
             #Rename file itself to match directory, and number it if there's more
             #than one.
             file.new_file_name = new_name
-            print(file.new_file_name)
 
             #Finally move the file to the new path.
             file.destination_path = os.path.join(src_folder.dest_path, file.new_file_name)
-            print(file.destination_path)
             file.move()
+
+        #If no matching pattern is found, put in an unknown folder.
         else:
-            pass
+            unknown_folder = (os.path.join(src_folder.dest_path, "Unknown"))
+
+            if os.path.exists(unknown_folder):
+                pass
+            else:
+                os.mkdir(unknown_folder)
+                         
+            file.destination_path = os.path.join(unknown_folder)
+            file.new_file_name = file.file_name
+
+            #Finally move the file over.
+            file.move()
 
 def description():
     '''Just describes procedure of script if invoked improperly.'''
