@@ -25,15 +25,15 @@ class File:
         #Now join to destination path
         full_new_file_path = os.path.join(self.destination_path, new_name_with_ext)
 
-        print(full_new_file_path)
+        print("FUll new file path", full_new_file_path)
 
         #Invoke nice_rename.  Might just merge this function later.
         self.nice_rename(full_new_file_path)
 
+
     def nice_rename(self, new_file):
         '''Makes sure it isn't overwriting anything.'''
 
-        new_file = new_file.rstrip()
 
         #Check to see if this file name already exists. Number it if so.
         if os.path.exists(new_file):
@@ -45,7 +45,12 @@ class File:
             #Now recursively call the naming function again.
             self.nice_rename(full_new_file_path)
         else:
-            os.rename(self.full_file_path_name, new_file)
+            try:
+                os.rename(self.full_file_path_name, new_file)
+
+            except:
+                FileNotFoundError
+                print(self.full_file_path_name, " not found. Skipping")
 
     def number_file(self, text, padding=2):
         '''Takes an input file-name and figures out where to add a string'''
@@ -54,7 +59,7 @@ class File:
 
         text = split_text[0]
 
-        #Now check to see if number is already there.
+        #Now check to see if number is already there, noting the padding.
         last = text[-padding:]
 
         #Check to see if last three characters are numbers, and if so, add one.
@@ -65,6 +70,7 @@ class File:
             next_increment = next_increment.zfill(padding)
 
             return_text = text.replace(last, str(next_increment))
+
         else:
             return_text = text + '01'
 
