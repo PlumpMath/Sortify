@@ -25,36 +25,36 @@ class File:
         #Now join to destination path
         full_new_file_path = os.path.join(self.destination_path, new_name_with_ext)
 
-        print("FUll new file path", full_new_file_path)
-
         #Invoke nice_rename.  Might just merge this function later.
         self.nice_rename(full_new_file_path)
 
 
     def nice_rename(self, new_file):
-        '''Makes sure it isn't overwriting anything.'''
-
+        '''Makes sure it isn't overwriting anything by adding numbers to the end of it.'''
 
         #Check to see if this file name already exists. Number it if so.
         if os.path.exists(new_file):
-            print("***File {0} exists, numbering it".format(new_file))
+            #print("***File {0} exists, numbering it".format(new_file))
             numbered_file_name = self.number_file(new_file)
             new_name_with_ext = str(numbered_file_name + '.' + self.extension)
             full_new_file_path = os.path.join(self.destination_path, new_name_with_ext)
 
             #Now recursively call the naming function again.
             self.nice_rename(full_new_file_path)
-        else:
-            try:
-                os.rename(self.full_file_path_name, new_file)
 
-            except:
-                FileNotFoundError
-                print(self.full_file_path_name, " not found. Skipping")
+        elif os.path.exists(new_file) == False:
+            os.rename(self.full_file_path_name, new_file)
+            print("\nOriginal file {0} ----> renamed to {1}".format(self.full_file_path_name, new_file))
+
+        else:
+            pass
 
     def number_file(self, text, padding=2):
         '''Takes an input file-name and figures out where to add a string'''
-        #First get rid of extension
+        #First get just the filename, no parent directories
+        text = os.path.basename(text)
+
+        #Then, get rid of extension
         split_text = text.split('.')
 
         text = split_text[0]
@@ -64,12 +64,12 @@ class File:
 
         #Check to see if last three characters are numbers, and if so, add one.
         if last.isdigit():
-            next_increment = str(int(last) + 1)
+            next_increment = int(last) + 1
 
             #Make sure to pad the answer
-            next_increment = next_increment.zfill(padding)
+            next_increment = str(next_increment).zfill(padding)
 
-            return_text = text.replace(last, str(next_increment))
+            return_text = text.replace(last, next_increment)
 
         else:
             return_text = text + '01'
