@@ -56,7 +56,7 @@ def employee_sorter(employeeTxt, source, destination, extension='.pdf', delimite
             else:
                 os.mkdir(unknown_folder)
                          
-            file.destination_path = os.path.join(unknown_folder)
+            file.destination_path = unknown_folder
             file.new_file_name = file.file_name
 
             #Finally move the file over.
@@ -94,12 +94,11 @@ if __name__ == '__main__':
             print("\n**Missing text file, this won't continue")
             sys.exit()
 
-        elif os.path.exists(destination):
-            print("Found destination directory.")
-
-        else:
+        try:
             os.mkdir(destination)
             print("created output directory ", destination)
+        except:
+            pass
 
         #Now invoke the actual sorting function
         employee_sorter(txt_file, source, destination)
