@@ -49,13 +49,13 @@ def employee_sorter(employeeTxt, source, destination, extension='.pdf', delimite
 
         #If no matching pattern is found, put in an unknown folder.
         else:
-            unknown_folder = (os.path.join(src_folder.dest_path, "Unknown"))
+            unknown_folder = (os.path.join(src_folder.dest_path, file.file_name))
 
             if os.path.exists(unknown_folder):
                 pass
             else:
                 os.mkdir(unknown_folder)
-                         
+
             file.destination_path = unknown_folder
             file.new_file_name = file.file_name
 
