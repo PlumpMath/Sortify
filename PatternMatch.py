@@ -51,6 +51,8 @@ class TextRead:
         #Load text file
         self.text_list = open(text_file_path, 'r')
 
+        print(self.text_list)
+
         for number, each_line in enumerate(self.text_list):
             line_number = str(number)
             line_text = str(each_line)
@@ -79,3 +81,46 @@ class TextRead:
 
             if len(possible_match) > threshold:
                 return pattern.text
+
+class TextReadDir:
+    '''Creates a TextRead instance for every text file in a given directory'''
+
+    def __init__(self, dir_path, file_list = [], delimiters =[], textreads=[]):
+        self.dir_path = dir_path
+        self.textreads = textreads
+        self.delimiters = delimiters
+
+        available_files = os.listdir(dir_path)
+        #Make list of files and create textread instances.
+        for text_file in available_files:
+
+            file_name = os.path.join(self.dir_path, text_file)
+
+            #Filter out anything that isn't a .txt file
+            if str(file_name).endswith('.txt'):
+                text_file_name = TextRead(file_name, delimiters = self.delimiters)
+
+                #Create a new instance of TextRead for a given file
+                self.textreads.append(text_file_name)
+            else:
+                pass
+
+    def get_text_file_names(self):
+    #Now get basename of each element in file_list, and use this name to create subdirs
+        name_list = []
+
+        for full_file_paths in self.textreads:
+            name = os.path.basename(full_file_paths.text_file_path)
+            name_list.append(name)
+
+        return name_list
+
+    def lookup_pattern(self, pattern, threshold):
+        '''Returns the closest match of a pattern for a text_file directory'''
+        for files in self.textreads:
+            possible_match = files.lookup(pattern, threshold)
+
+            if possible_match:
+                return possible_match
+            else:
+                pass
