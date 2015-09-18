@@ -1,92 +1,77 @@
 #!/usr/local/bin/python3
 import os
 import sys
-import PatternMatch
+import PatternMatch as p
 import FolderManager
 
-def check_missing(employeeTxt, folder, extension='.pdf', delimiters=['-', ',',' '], threshold=2):
-
-    #First, establish source files
-    #Scan a folder of imported pdfs to categorize
-
+threshold = 2
+employee_delimiter = [
+    'Scan from scanner',
+    '2015',
+    '001_Batch_April19 - uploaded',
+     '002_Batch_April21 - uploaded',
+     '003_Batch_April22 - uploaded',
+     '004_Batch_April23 - uploaded',
+     '005_Batch_April25 - uploaded',
+     '006_Batch_April26 - uploaded',
+     '007_Batch_May02 - uploaded',
+     '008_Batch_May03 - uploaded',
+     '009_Batch_May06 - uploaded',
+     '010_Batch_May07 - uploaded',
+     '011_Batch_May08 - uploaded',
+     '012_Batch_May11 - uploaded',
+     '013_Batch_May12 - uploaded',
+     '014_Batch_May13 - uploaded',
+     '015_Batch_May20 - uploaded',
+     '016_Batch_May22 - uploaded', '017_Batch_May25 - uploaded',
+     '018_Batch_May26 - uploaded', '019_Batch_May27 - uploaded',
+     '020_Batch_May28 - uploaded', '021_Batch_May29 - uploaded',
+     '022_Batch_June01 - uploaded', '023_Batch_June02 - uploaded',
+     '024_Batch_June04 - uploaded', '025_Batch_June05 - uploaded',
+     '026_Batch_June06 - uploaded', '027_Batch_June07 - uploaded',
+     '028_Batch_June08 - uploaded', '029_Batch_June09 - uploaded',
+     '030_Batch_June10 - uploaded', '031_Batch_June11 - uploaded',
+     '032_Batch_June12 - uploaded', '033_Batch_June14 - uploaded',
+     '034_Batch_June15 - uploaded', '035_Batch_June16 - uploaded',
+     '036_Batch_June17 - uploaded', '037_Batch_June18 - uploaded',
+     '038_Batch_June19 - uploaded', '039_Batch_June21 - uploaded',
+     '040_Batch_June22 - uploaded', '041_Batch_June23 - uploaded',
+     '042_Batch_June24 - uploaded', '043_Batch_June25 - uploaded',
+     '044_Batch_June26 - uploaded', '045_Batch_June28_29 - uploaded',
+     '046_Batch_June30 - uploaded', '047_Batch_July2 - uploaded',
+     '048_Batch_July3 - uploaded', '049_Batch_July5 - uploaded',
+     '050_Batch_July6 - uploaded', '051_Batch_July7 - uploaded',
+     '052_Batch_July8 - uploaded', '053_Batch_July9 - uploaded',
+     '054_Batch_July10 - uploaded', '055_Batch_July11 - uploaded',
+     '056_Batch_July12 - uploaded', '057_Batch_July28 - uploaded',
+     '058_Batch_July29 - uploaded', '059_Batch_Aug01 - uploaded',
+     '060_Batch_Aug02 - uploaded', '061_Batch_Aug08 - uploaded',
+     '062_Batch_Aug24 - uploaded', '063_Batch_Aug30 - uploaded',
+     '064_Batch_Sept06 - uploaded', '15001-Ayotte,Weldon - uploaded',
+     'EmployeeData',
+     'Progress',
+    '(',
+    ')',
+    '-',
+    ',',
+    ' ',]
+def check_missing(employeeTxt, folder_text, delimiters=employee_delimiter, threshold=2):
     #Load each employee as a pattern from each line of text file.
-    employee_list = PatternMatch.TextRead(employeeTxt)
+    employee_list = p.TextRead(employeeTxt, delimiters=employee_delimiter)
+    folder_listing = p.TextRead(folder_text, delimiters=employee_delimiter)
 
-    #Now examine files with a FolderManager instance.
-    src_folder = FolderManager.RootDirectory(folder, folder)
+    [employee_list.lookup(f, threshold, keep_match=False) for f in folder_listing.patterns]
 
-    #Search for all available PDFs
-    src_folder.recursive_search(extension, path=None)
+    return employee_list.patterns
+        
+missing_employees2 = check_missing('C:\\Payroll\\active_employees.txt', 'C:\\Payroll\\payroll_all_dirnames2.txt', threshold)
 
-    #Make a list of found, and not found folders
-    found = []
-    not_found = []
+missing_employees3 = sorted(missing_employees2, key=lambda patterns: patterns.chunks[1])
 
-    for name in employee_list.patterns:
-        #go through each pattern,and then compare that to the name of each source folder.
+length = (len(missing_employees3))
 
-        for every_folder in src_folder.dirs:
-            if str(every_folder) in name.text:
-                print("Found matching folder ", every_folder)
-                found.append(name.text)
-            else:
-                not_found.append(name.text)
+print("***\nMissingEmployees with threshold of %d finished with a length of %d**\n" % (threshold, length))
 
-    #Because the last iteration creates doubles, I'll just turn the list into a set to get the unique ones
-    not_found = set(not_found)
-    found = set(found)
-
-    missing_folders = not_found.difference(found)
-
-    for missing in missing_folders:
-        print("No match found for ", missing)
-
-    print("A total of %d are missing" % len(missing_folders))
-
-
-check_missing("F:\\Payroll\\EmployeeData\\active_employees.txt", "F:\\Payroll\\")
-
-
-##def description():
-##    '''Just describes procedure of script if invoked improperly.'''
-##    print("\nThis script needs arguments\n")
-##    print("Example usage: ")
-##    print("EmployeeSorter /dir/text_file.txt [extension] [file-type] [delimiters] [threshold]")
-##    print("\n")
-##
-##
-##if __name__ == '__main__':
-##
-##    length = len(sys.argv)
-##
-##    #If there's no args at all
-##    if length == 1:
-##        description()
-##
-##    #This clause works with something like Python SortByEmployee somefile.txt /made-up-dir/
-##    elif length == 3:
-##
-##        #Get all relevant arguments
-##        txt_file = sys.argv[1]
-##        source = os.getcwd()
-##        destination = os.path.join(source, sys.argv[2])
-##
-##        #check to make sure txt file exists
-##        if os.path.exists(txt_file):
-##            print("Txt file found")
-##
-##        elif os.path.exists(txt_file) == False:
-##            print("\n**Missing text file, this won't continue")
-##            sys.exit()
-##
-##        try:
-##            os.mkdir(destination)
-##            print("created output directory ", destination)
-##        except:
-##            pass
-##
-##        #Now invoke the actual sorting function
-##        employee_sorter(txt_file, source, destination)
-##
-##    else:
-##        description()
+with open('F:\\Payroll\\EmployeeData\\missing_employees.txt', 'w') as missing_employee:
+    for employee in missing_employees3:
+        missing_employee.write(employee.text + '\n')
