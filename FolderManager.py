@@ -78,10 +78,11 @@ class File:
 
 class RootDirectory:
     '''Manages all things related to files and folders.'''
-    def __init__(self, src_path, dest_path, files=[]):
+    def __init__(self, src_path, dest_path, files=[], dirs=[]):
         self.src_path = src_path
         self.dest_path = dest_path
         self.files = files
+        self.dirs = dirs
 
     def recursive_search(self, pattern, path=None):
         '''Searches recursively from root directory for a filename of a given pattern.'''
@@ -108,6 +109,7 @@ class RootDirectory:
 
             #If the item is a directory, recursively call this function on it.
             elif os.path.isdir(full_filepathname):
+                self.dirs.append(anything)
                 self.recursive_search(pattern, path=full_filepathname)
 
             else:
