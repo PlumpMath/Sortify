@@ -1,11 +1,12 @@
 import os
+import fileinput
 from sys import argv
 
 class Pattern:
     '''Does pattern matching for text processing.'''
-    def __init__(self, text, chunks=[]):
+    def __init__(self, text):
         self.text = text
-        self.chunks = chunks
+        self.chunks = []
 
         #seperates any text seperated by a delimiter and puts them into chunks.
     def chunkify(self, delimiters):
@@ -21,6 +22,9 @@ class Pattern:
         #Also remove formatting
         self.chunks = self.remove_formatting(self.chunks)
 
+        #Remove any zero-length chunks
+        self.chunks = self.remove_empties(self.chunks)
+
     def remove_formatting(self, input_list):
         '''Remove any newlines and uppercase.'''
         return_list = []
@@ -29,6 +33,20 @@ class Pattern:
             return_x = x.lower()
             return_x = return_x.rstrip()
             return_list.append(return_x)
+
+        return return_list
+
+    def remove_empties(self, input_list):
+        '''Removes any empty strings from a list'''
+        return_list = []
+
+        for x in input_list:
+            char = str(x)
+            
+            if len(char) > 0:
+                return_list.append(char)
+            else:
+                pass
 
         return return_list
 
@@ -42,27 +60,30 @@ class Pattern:
 
 class TextRead:
     '''Reads text file line by line and loads patterns.'''
-    def __init__(self, text_file_path, text_list=None, delimiters = [], patterns=[]):
+    def __init__(self, text_file_path, delimiters = []):
         self.text_file_path = text_file_path
-        self.text_list = text_list
         self.delimiters = delimiters
-        self.patterns = patterns
+        self.raw_text = []
+        self.patterns = []
 
-        #Load text file
-        self.text_list = open(text_file_path, 'r')
-
-        print(self.text_list)
-
-        for number, each_line in enumerate(self.text_list):
-            line_number = str(number)
+##        #Load text file
+        for each_line in fileinput.input(self.text_file_path):
             line_text = str(each_line)
             #Now strip the newlines, they're just annoying
             line_text = line_text.rstrip()
 
-            #Combine them to prepare them for new Pattern instance.
-            line_name = str(line_number + line_text)
+            self.raw_text.append(line_text)
 
-            line_name = Pattern(str(line_text))
+        fileinput.close()
+
+        #Sort the raw_text just for some sanity.
+
+        self.raw_text.sort()
+
+        #Now go through the raw text and create patterns based on each of them.
+        for raw in self.raw_text:
+            name = str(raw)
+            line_name = Pattern(name)
 
             #Make sure to chunk them
             line_name.chunkify(self.delimiters)
@@ -70,57 +91,27 @@ class TextRead:
             #Add them to global list of patterns
             self.patterns.append(line_name)
 
-    def lookup(self, pattern_query, threshold):
+    def lookup(self, pattern_query, threshold, keep_match=True):
         #First compare what's in the patterns against a Pattern string query, and return
-        #any matches if the list of matches is larger than the threshold number.
-        return_list = []
+        #any matches if the list of matches is larger than the threshold number.  By default
+        #Any matching pattern will remain in the patterns, unless keep_match set to False.
 
-        for pattern in self.patterns:
-            #Create variable of potential match
-            possible_match = pattern.match(pattern_query)
+        #First filter out any pattern queries that don't have enough chunks to be considered a match.
+        if len(pattern_query.chunks) < threshold:
+            pass
 
-            if len(possible_match) > threshold:
-                return pattern.text
+        else:
 
-class TextReadDir:
-    '''Creates a TextRead instance for every text file in a given directory'''
+            for pattern in self.patterns:
+                #Create variable of potential match
+                possible_match = pattern.match(pattern_query)
+                
+                if len(possible_match) >= threshold:
+                    match = pattern.text
 
-    def __init__(self, dir_path, file_list = [], delimiters =[], textreads=[]):
-        self.dir_path = dir_path
-        self.textreads = textreads
-        self.delimiters = delimiters
-
-        available_files = os.listdir(dir_path)
-        #Make list of files and create textread instances.
-        for text_file in available_files:
-
-            file_name = os.path.join(self.dir_path, text_file)
-
-            #Filter out anything that isn't a .txt file
-            if str(file_name).endswith('.txt'):
-                text_file_name = TextRead(file_name, delimiters = self.delimiters)
-
-                #Create a new instance of TextRead for a given file
-                self.textreads.append(text_file_name)
-            else:
-                pass
-
-    def get_text_file_names(self):
-    #Now get basename of each element in file_list, and use this name to create subdirs
-        name_list = []
-
-        for full_file_paths in self.textreads:
-            name = os.path.basename(full_file_paths.text_file_path)
-            name_list.append(name)
-
-        return name_list
-
-    def lookup_pattern(self, pattern, threshold):
-        '''Returns the closest match of a pattern for a text_file directory'''
-        for files in self.textreads:
-            possible_match = files.lookup(pattern, threshold)
-
-            if possible_match:
-                return possible_match
-            else:
-                pass
+                    if keep_match == False:
+                        self.patterns.remove(pattern)
+                        
+                    return match
+                else:
+                    pass
