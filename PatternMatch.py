@@ -42,7 +42,7 @@ class Pattern:
 
         for x in input_list:
             char = str(x)
-            
+
             if len(char) > 0:
                 return_list.append(char)
             else:
@@ -53,10 +53,18 @@ class Pattern:
     def match(self, pattern_query):
         '''Determines if there's a match in search to both the chunks and the
         settings of the Pattern.'''
+
         self_set = set(self.remove_formatting(self.chunks))
         query_set = set(self.remove_formatting(pattern_query.chunks))
 
-        return list(self_set.intersection(query_set))
+        possible_match = list(self_set.intersection(query_set))
+
+        if len(possible_match) > 0:
+            result = possible_match
+        else:
+            result = None
+
+        return result
 
 class TextRead:
     '''Reads text file line by line and loads patterns.'''
@@ -105,13 +113,13 @@ class TextRead:
             for pattern in self.patterns:
                 #Create variable of potential match
                 possible_match = pattern.match(pattern_query)
-                
+
                 if len(possible_match) >= threshold:
                     match = pattern.text
 
                     if keep_match == False:
                         self.patterns.remove(pattern)
-                        
+
                     return match
                 else:
                     pass
